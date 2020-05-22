@@ -6,3 +6,9 @@ go version go1.14.3 windows/amd64
 
 # Package
 vendor
+
+# IDE 
+JetBrains GoLand 2019.2.3
+
+# Email
+zjok@outlook.com
