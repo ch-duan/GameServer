@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -41,7 +40,7 @@ func init() {
 	err = orm.RegisterDataBase(
 		"default",
 		"mysql",
-		beego.AppConfig.String("databasesource"))
+		"root:yxl8359026@tcp(localhost:3306)/game?charset=utf8")
 	if err != nil {
 		fmt.Println("数据库注册失败")
 	}

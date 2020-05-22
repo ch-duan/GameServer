@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/astaxie/beego"
-	_ "hello/routers"
+	_ "zjko.vip/game/src/account/routers"
 )
 
 func main() {

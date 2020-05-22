@@ -5,7 +5,11 @@
       <entry url="file://$PROJECT_DIR$">
         <entryData>
           <resourceRoots>
-            <path value="file://$PROJECT_DIR$" />
+            <path value="file://$PROJECT_DIR$/src/account" />
+            <path value="file://$PROJECT_DIR$/src/common" />
+            <path value="file://$PROJECT_DIR$/src/g2048" />
+            <path value="file://$PROJECT_DIR$/src/gobang" />
+            <path value="file://$PROJECT_DIR$/src/greedysnake" />
           </resourceRoots>
         </entryData>
       </entry>

@@ -1,12 +1,12 @@
 package test
 
 import (
-	_ "hello/routers"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"runtime"
 	"testing"
+	_ "zjko.vip/game/src/account/routers"
 
 	"github.com/astaxie/beego"
 	. "github.com/smartystreets/goconvey/convey"
