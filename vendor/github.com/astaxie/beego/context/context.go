@@ -191,7 +191,7 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 				renderer = jsonRenderer(result)
 			}
 		}
-		renderer.Render(ctx)
+		Render(ctx)
 	}
 }
 

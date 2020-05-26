@@ -124,7 +124,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		field := ind.FieldByIndex(fi.fieldIndex)
 		if fi.isFielder {
 			f := field.Addr().Interface().(Fielder)
-			value = f.RawValue()
+			value = RawValue()
 		} else {
 			switch fi.fieldType {
 			case TypeBooleanField:
@@ -180,7 +180,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			case TypeTimeField, TypeDateField, TypeDateTimeField:
 				value = field.Interface()
 				if t, ok := value.(time.Time); ok {
-					d.ins.TimeToDB(&t, tz)
+					TimeToDB(&t, tz)
 					if t.IsZero() {
 						value = nil
 					} else {
@@ -239,11 +239,11 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					}
 				}
 				tnow := time.Now()
-				d.ins.TimeToDB(&tnow, tz)
+				TimeToDB(&tnow, tz)
 				value = tnow
 				if fi.isFielder {
 					f := field.Addr().Interface().(Fielder)
-					f.SetRaw(tnow.In(DefaultTimeLoc))
+					SetRaw(tnow.In(DefaultTimeLoc))
 				} else if field.Kind() == reflect.Ptr {
 					v := tnow.In(DefaultTimeLoc)
 					field.Set(reflect.ValueOf(&v))
@@ -266,7 +266,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 
 // create insert sql preparation statement object.
 func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string, error) {
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	dbcols := make([]string, 0, len(mi.fields.dbcols))
 	marks := make([]string, 0, len(mi.fields.dbcols))
@@ -282,11 +282,11 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	d.ins.HasReturningID(mi, &query)
+	HasReturningID(mi, &query)
 
-	stmt, err := q.Prepare(query)
+	stmt, err := Prepare(query)
 	return stmt, query, err
 }
 
@@ -297,13 +297,13 @@ func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, 
 		return 0, err
 	}
 
-	if d.ins.HasReturningID(mi, nil) {
-		row := stmt.QueryRow(values...)
+	if HasReturningID(mi, nil) {
+		row := QueryRow(values...)
 		var id int64
 		err := row.Scan(&id)
 		return id, err
 	}
-	res, err := stmt.Exec(values...)
+	res, err := Exec(values...)
 	if err == nil {
 		return res.LastInsertId()
 	}
@@ -333,7 +333,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 		args = append(args, pkValue)
 	}
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	sels := strings.Join(mi.fields.dbcols, sep)
@@ -355,9 +355,9 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 		refs[i] = &ref
 	}
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	row := q.QueryRow(query, args...)
+	row := QueryRow(query, args...)
 	if err := row.Scan(refs...); err != nil {
 		if err == sql.ErrNoRows {
 			return ErrNoRows
@@ -385,7 +385,7 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	}
 
 	if len(autoFields) > 0 {
-		err = d.ins.setval(q, mi, autoFields)
+		err = setval(q, mi, autoFields)
 	}
 	return id, err
 }
@@ -448,7 +448,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 
 	var err error
 	if len(autoFields) > 0 {
-		err = d.ins.setval(q, mi, autoFields)
+		err = setval(q, mi, autoFields)
 	}
 
 	return cnt, err
@@ -457,7 +457,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 // execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	marks := make([]string, len(names))
 	for i := range marks {
@@ -476,10 +476,10 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+	if isMulti || !HasReturningID(mi, &query) {
+		res, err := Exec(query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -488,7 +488,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 		}
 		return 0, err
 	}
-	row := q.QueryRow(query, values...)
+	row := QueryRow(query, values...)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -524,7 +524,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 
 	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
 
 	if err != nil {
@@ -577,10 +577,10 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	//conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+	if isMulti || !HasReturningID(mi, &query) {
+		res, err := Exec(query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -590,7 +590,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 		return 0, err
 	}
 
-	row := q.QueryRow(query, values...)
+	row := QueryRow(query, values...)
 	var id int64
 	err = row.Scan(&id)
 	if err != nil && err.Error() == `pq: syntax error at or near "ON"` {
@@ -648,16 +648,16 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 	setValues = append(setValues, pkValue)
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	sep := fmt.Sprintf("%s = ?, %s", Q, Q)
 	setColumns := strings.Join(setNames, sep)
 
 	query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.table, Q, Q, setColumns, Q, Q, pkName, Q)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	res, err := q.Exec(query, setValues...)
+	res, err := Exec(query, setValues...)
 	if err == nil {
 		return res.RowsAffected()
 	}
@@ -687,15 +687,15 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		args = append(args, pkValue)
 	}
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
 	wheres := strings.Join(whereCols, sep)
 
 	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, wheres, Q)
 
-	d.ins.ReplaceMarks(&query)
-	res, err := q.Exec(query, args...)
+	ReplaceMarks(&query)
+	res, err := Exec(query, args...)
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -750,9 +750,9 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	var query, T string
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
-	if d.ins.SupportUpdateJoin() {
+	if SupportUpdateJoin() {
 		T = "T0."
 	}
 
@@ -779,20 +779,20 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	sets := strings.Join(cols, ", ") + " "
 
-	if d.ins.SupportUpdateJoin() {
+	if SupportUpdateJoin() {
 		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET %s%s", Q, mi.table, Q, join, sets, where)
 	} else {
 		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s", Q, mi.fields.pk.column, Q, Q, mi.table, Q, join, where)
 		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, sets, Q, mi.fields.pk.column, Q, supQuery)
 	}
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 	var err error
 	var res sql.Result
 	if qs != nil && qs.forContext {
-		res, err = q.ExecContext(qs.ctx, query, values...)
+		res, err = ExecContext(qs.ctx, query, values...)
 	} else {
-		res, err = q.Exec(query, values...)
+		res, err = Exec(query, values...)
 	}
 	if err == nil {
 		return res.RowsAffected()
@@ -841,7 +841,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		panic(fmt.Errorf("delete operation cannot execute without condition"))
 	}
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	where, args := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
@@ -849,10 +849,10 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
 	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	var rs *sql.Rows
-	r, err := q.Query(query, args...)
+	r, err := Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -885,12 +885,12 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
 	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 	var res sql.Result
 	if qs != nil && qs.forContext {
-		res, err = q.ExecContext(qs.ctx, query, args...)
+		res, err = ExecContext(qs.ctx, query, args...)
 	} else {
-		res, err = q.Exec(query, args...)
+		res, err = Exec(query, args...)
 	}
 	if err == nil {
 		num, err := res.RowsAffected()
@@ -947,7 +947,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	rlimit := qs.limit
 	offset := qs.offset
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	var tCols []string
 	if len(cols) > 0 {
@@ -1011,17 +1011,17 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		query += " FOR UPDATE"
 	}
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	var rs *sql.Rows
 	var err error
 	if qs != nil && qs.forContext {
-		rs, err = q.QueryContext(qs.ctx, query, args...)
+		rs, err = QueryContext(qs.ctx, query, args...)
 		if err != nil {
 			return 0, err
 		}
 	} else {
-		rs, err = q.Query(query, args...)
+		rs, err = Query(query, args...)
 		if err != nil {
 			return 0, err
 		}
@@ -1144,7 +1144,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, join, where, groupBy)
 
@@ -1152,13 +1152,13 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
 	}
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	var row *sql.Row
 	if qs != nil && qs.forContext {
-		row = q.QueryRowContext(qs.ctx, query, args...)
+		row = QueryRowContext(qs.ctx, query, args...)
 	} else {
-		row = q.QueryRow(query, args...)
+		row = QueryRow(query, args...)
 	}
 	err = row.Scan(&cnt)
 	return
@@ -1190,7 +1190,7 @@ func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator stri
 		if len(params) > 1 {
 			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
 		}
-		sql = d.ins.OperatorSQL(operator)
+		sql = OperatorSQL(operator)
 		switch operator {
 		case "exact":
 			if arg == nil {
@@ -1303,7 +1303,7 @@ setValue:
 		if str == nil {
 			switch t := val.(type) {
 			case time.Time:
-				d.ins.TimeFromDB(&t, tz)
+				TimeFromDB(&t, tz)
 				value = t
 			default:
 				s := StrTo(ToStr(t))
@@ -1591,7 +1591,7 @@ setValue:
 
 	if !isNative {
 		fd := field.Addr().Interface().(Fielder)
-		err := fd.SetRaw(value)
+		err := SetRaw(value)
 		if err != nil {
 			err = fmt.Errorf("converted value `%v` set to Fielder `%s` failed, err: %s", value, fi.fullName, err)
 			return nil, err
@@ -1643,7 +1643,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	hasExprs := len(exprs) > 0
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	if hasExprs {
 		cols = make([]string, 0, len(exprs))
@@ -1679,9 +1679,9 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	rs, err := q.Query(query, args...)
+	rs, err := Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -1822,8 +1822,8 @@ func (d *dbBase) DbTypes() map[string]string {
 // gt all tables.
 func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	tables := make(map[string]bool)
-	query := d.ins.ShowTablesQuery()
-	rows, err := db.Query(query)
+	query := ShowTablesQuery()
+	rows, err := Query(query)
 	if err != nil {
 		return tables, err
 	}
@@ -1847,8 +1847,8 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 // get all cloumns in table.
 func (d *dbBase) GetColumns(db dbQuerier, table string) (map[string][3]string, error) {
 	columns := make(map[string][3]string)
-	query := d.ins.ShowColumnsQuery(table)
-	rows, err := db.Query(query)
+	query := ShowColumnsQuery(table)
+	rows, err := Query(query)
 	if err != nil {
 		return columns, err
 	}

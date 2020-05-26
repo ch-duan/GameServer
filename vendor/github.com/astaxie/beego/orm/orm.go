@@ -126,20 +126,20 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 // read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	return Read(o.db, mi, ind, o.alias.TZ, cols, false)
 }
 
 // read data to model, like Read(), but use "SELECT FOR UPDATE" form
 func (o *orm) ReadForUpdate(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
+	return Read(o.db, mi, ind, o.alias.TZ, cols, true)
 }
 
 // Try to read a row from the database, or insert one if it doesn't exist
 func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	err := Read(o.db, mi, ind, o.alias.TZ, cols, false)
 	if err == ErrNoRows {
 		// Create
 		id, err := o.Insert(md)
@@ -161,7 +161,7 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 // insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+	id, err := Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
@@ -201,7 +201,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 		for i := 0; i < sind.Len(); i++ {
 			ind := reflect.Indirect(sind.Index(i))
 			mi, _ := o.getMiInd(ind.Interface(), false)
-			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+			id, err := Insert(o.db, mi, ind, o.alias.TZ)
 			if err != nil {
 				return cnt, err
 			}
@@ -212,7 +212,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 		}
 	} else {
 		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
-		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
+		return InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
 	}
 	return cnt, nil
 }
@@ -220,7 +220,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 // InsertOrUpdate data to database
 func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
+	id, err := InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
 	if err != nil {
 		return id, err
 	}
@@ -234,14 +234,14 @@ func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64
 // cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
+	return Update(o.db, mi, ind, o.alias.TZ, cols)
 }
 
 // delete model in database
 // cols shows the delete conditions values read from. default is pk
 func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
+	num, err := Delete(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}
@@ -470,7 +470,7 @@ func (o *orm) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 		return ErrTxHasBegan
 	}
 	var tx *sql.Tx
-	tx, err := o.db.(txer).BeginTx(ctx, opts)
+	tx, err := BeginTx(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -488,7 +488,7 @@ func (o *orm) Commit() error {
 	if !o.isTx {
 		return ErrTxDone
 	}
-	err := o.db.(txEnder).Commit()
+	err := Commit()
 	if err == nil {
 		o.isTx = false
 		o.Using(o.alias.Name)
@@ -503,7 +503,7 @@ func (o *orm) Rollback() error {
 	if !o.isTx {
 		return ErrTxDone
 	}
-	err := o.db.(txEnder).Rollback()
+	err := Rollback()
 	if err == nil {
 		o.isTx = false
 		o.Using(o.alias.Name)

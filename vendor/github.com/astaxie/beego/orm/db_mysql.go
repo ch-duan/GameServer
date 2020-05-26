@@ -92,7 +92,7 @@ func (d *dbBaseMysql) ShowColumnsQuery(table string) string {
 
 // execute sql to check index exist.
 func (d *dbBaseMysql) IndexExists(db dbQuerier, table string, name string) bool {
-	row := db.QueryRow("SELECT count(*) FROM information_schema.statistics "+
+	row := QueryRow("SELECT count(*) FROM information_schema.statistics "+
 		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
 	var cnt int
 	row.Scan(&cnt)
@@ -119,7 +119,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 
 	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
 
 	if err != nil {
@@ -156,10 +156,10 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 	//conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+	if isMulti || !HasReturningID(mi, &query) {
+		res, err := Exec(query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -169,7 +169,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 		return 0, err
 	}
 
-	row := q.QueryRow(query, values...)
+	row := QueryRow(query, values...)
 	var id int64
 	err = row.Scan(&id)
 	return id, err

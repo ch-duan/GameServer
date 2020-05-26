@@ -810,43 +810,43 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//call the controller init function
-		execController.Init(context, runRouter.Name(), runMethod, execController)
+		Init(context, runRouter.Name(), runMethod, execController)
 
 		//call prepare function
-		execController.Prepare()
+		Prepare()
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if BConfig.WebConfig.EnableXSRF {
-			execController.XSRFToken()
+			XSRFToken()
 			if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut ||
 				(r.Method == http.MethodPost && (context.Input.Query("_method") == http.MethodDelete || context.Input.Query("_method") == http.MethodPut)) {
-				execController.CheckXSRFCookie()
+				CheckXSRFCookie()
 			}
 		}
 
-		execController.URLMapping()
+		URLMapping()
 
 		if !context.ResponseWriter.Started {
 			//exec main logic
 			switch runMethod {
 			case http.MethodGet:
-				execController.Get()
+				Get()
 			case http.MethodPost:
-				execController.Post()
+				Post()
 			case http.MethodDelete:
-				execController.Delete()
+				Delete()
 			case http.MethodPut:
-				execController.Put()
+				Put()
 			case http.MethodHead:
-				execController.Head()
+				Head()
 			case http.MethodPatch:
-				execController.Patch()
+				Patch()
 			case http.MethodOptions:
-				execController.Options()
+				Options()
 			case http.MethodTrace:
-				execController.Trace()
+				Trace()
 			default:
-				if !execController.HandlerFunc(runMethod) {
+				if !HandlerFunc(runMethod) {
 					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
 					in := param.ConvertParams(methodParams, method.Type(), context)
@@ -862,7 +862,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			//render template
 			if !context.ResponseWriter.Started && context.Output.Status == 0 {
 				if BConfig.WebConfig.AutoRender {
-					if err := execController.Render(); err != nil {
+					if err := Render(); err != nil {
 						logs.Error(err)
 					}
 				}
@@ -870,7 +870,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		// finish all runRouter. release resource
-		execController.Finish()
+		Finish()
 	}
 
 	//execute middleware filters

@@ -32,12 +32,12 @@ func (o *rawPrepare) Exec(args ...interface{}) (sql.Result, error) {
 	if o.closed {
 		return nil, ErrStmtClosed
 	}
-	return o.stmt.Exec(args...)
+	return Exec(args...)
 }
 
 func (o *rawPrepare) Close() error {
 	o.closed = true
-	return o.stmt.Close()
+	return Close()
 }
 
 func newRawPreparer(rs *rawSet) (RawPreparer, error) {
@@ -45,9 +45,9 @@ func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 	o.rs = rs
 
 	query := rs.query
-	rs.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	st, err := rs.orm.db.Prepare(query)
+	st, err := Prepare(query)
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +77,10 @@ func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 // execute raw sql and return sql.Result
 func (o *rawSet) Exec() (sql.Result, error) {
 	query := o.query
-	o.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
-	return o.orm.db.Exec(query, args...)
+	return Exec(query, args...)
 }
 
 // set field value to row container
@@ -157,7 +157,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			var str string
 			switch d := value.(type) {
 			case time.Time:
-				o.orm.alias.DbBaser.TimeFromDB(&d, o.orm.alias.TZ)
+				TimeFromDB(&d, o.orm.alias.TZ)
 				ind.Set(reflect.ValueOf(d))
 			case []byte:
 				str = string(d)
@@ -316,10 +316,10 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 	}
 
 	query := o.query
-	o.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
-	rows, err := o.orm.db.Query(query, args...)
+	rows, err := Query(query, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return ErrNoRows
@@ -449,10 +449,10 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 	}
 
 	query := o.query
-	o.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
-	rows, err := o.orm.db.Query(query, args...)
+	rows, err := Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -594,12 +594,12 @@ func (o *rawSet) readValues(container interface{}, needCols []string) (int64, er
 	}
 
 	query := o.query
-	o.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
 	var rs *sql.Rows
-	rs, err := o.orm.db.Query(query, args...)
+	rs, err := Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -721,11 +721,11 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 	}
 
 	query := o.query
-	o.orm.alias.DbBaser.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
-	rs, err := o.orm.db.Query(query, args...)
+	rs, err := Query(query, args...)
 	if err != nil {
 		return 0, err
 	}

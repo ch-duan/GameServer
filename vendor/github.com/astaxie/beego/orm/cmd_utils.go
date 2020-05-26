@@ -33,7 +33,7 @@ func getDbDropSQL(al *alias) (sqls []string) {
 		os.Exit(2)
 	}
 
-	Q := al.DbBaser.TableQuote()
+	Q := TableQuote()
 
 	for _, mi := range modelCache.allOrdered() {
 		sqls = append(sqls, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.table, Q))
@@ -43,7 +43,7 @@ func getDbDropSQL(al *alias) (sqls []string) {
 
 // get database column type string.
 func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
-	T := al.DbBaser.DbTypes()
+	T := DbTypes()
 	fieldType := fi.fieldType
 	fieldSize := fi.size
 
@@ -119,7 +119,7 @@ checkColumn:
 
 // create alter sql string.
 func getColumnAddQuery(al *alias, fi *fieldInfo) string {
-	Q := al.DbBaser.TableQuote()
+	Q := TableQuote()
 	typ := getColumnTyp(al, fi)
 
 	if !fi.null {
@@ -140,8 +140,8 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 		os.Exit(2)
 	}
 
-	Q := al.DbBaser.TableQuote()
-	T := al.DbBaser.DbTypes()
+	Q := TableQuote()
+	T := DbTypes()
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 
 	tableIndexes = make(map[string][]dbIndex)
@@ -198,7 +198,7 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
 			
-			if fi.description != "" && al.Driver!=DRSqlite {
+			if fi.description != "" && al.Driver!= DRSqlite {
 				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
 			}
 

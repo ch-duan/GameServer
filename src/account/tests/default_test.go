@@ -9,7 +9,6 @@ import (
 	_ "zjko.vip/game/src/account/routers"
 
 	"github.com/astaxie/beego"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func init() {

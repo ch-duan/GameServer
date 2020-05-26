@@ -126,7 +126,7 @@ func (d *commandSyncDb) Run() error {
 
 	sqls, indexes := getDbCreateSQL(d.al)
 
-	tables, err := d.al.DbBaser.GetTables(db)
+	tables, err := GetTables(db)
 	if err != nil {
 		if d.rtOnError {
 			return err
@@ -141,7 +141,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			var fields []*fieldInfo
-			columns, err := d.al.DbBaser.GetColumns(db, mi.table)
+			columns, err := GetColumns(db, mi.table)
 			if err != nil {
 				if d.rtOnError {
 					return err
@@ -175,7 +175,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			for _, idx := range indexes[mi.table] {
-				if !d.al.DbBaser.IndexExists(db, idx.Table, idx.Name) {
+				if !IndexExists(db, idx.Table, idx.Name) {
 					if !d.noInfo {
 						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
 					}

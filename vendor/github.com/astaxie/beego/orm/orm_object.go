@@ -44,7 +44,7 @@ func (o *insertSet) Insert(md interface{}) (int64, error) {
 	if name != o.mi.fullName {
 		panic(fmt.Errorf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.fullName, name))
 	}
-	id, err := o.orm.alias.DbBaser.InsertStmt(o.stmt, o.mi, ind, o.orm.alias.TZ)
+	id, err := InsertStmt(o.stmt, o.mi, ind, o.orm.alias.TZ)
 	if err != nil {
 		return id, err
 	}
@@ -66,7 +66,7 @@ func (o *insertSet) Close() error {
 		return ErrStmtClosed
 	}
 	o.closed = true
-	return o.stmt.Close()
+	return Close()
 }
 
 // create new insert queryer.
@@ -74,7 +74,7 @@ func newInsertSet(orm *orm, mi *modelInfo) (Inserter, error) {
 	bi := new(insertSet)
 	bi.orm = orm
 	bi.mi = mi
-	st, query, err := orm.alias.DbBaser.PrepareInsert(orm.db, mi)
+	st, query, err := PrepareInsert(orm.db, mi)
 	if err != nil {
 		return nil, err
 	}

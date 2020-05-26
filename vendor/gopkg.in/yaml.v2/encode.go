@@ -95,7 +95,7 @@ func (e *encoder) marshal(tag string, in reflect.Value) {
 		// purposes because YAML has special support for
 		// timestamps.
 	case Marshaler:
-		v, err := m.MarshalYAML()
+		v, err := MarshalYAML()
 		if err != nil {
 			fail(err)
 		}

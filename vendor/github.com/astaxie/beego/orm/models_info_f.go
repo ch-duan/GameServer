@@ -191,7 +191,7 @@ checkType:
 			err = fmt.Errorf("the model Fielder can not be use ptr")
 			goto end
 		}
-		fieldType = f.FieldType()
+		fieldType = FieldType()
 		if fieldType&IsRelField > 0 {
 			err = fmt.Errorf("unsupport type custom field, please refer to https://github.com/astaxie/beego/blob/master/orm/models_fields.go#L24-L42")
 			goto end

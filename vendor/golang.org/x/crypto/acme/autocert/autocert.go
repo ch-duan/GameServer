@@ -444,7 +444,7 @@ func (m *Manager) cacheGet(ctx context.Context, ck certKey) (*tls.Certificate, e
 	if m.Cache == nil {
 		return nil, ErrCacheMiss
 	}
-	data, err := m.Cache.Get(ctx, ck.String())
+	data, err := Get(ctx, ck.String())
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +519,7 @@ func (m *Manager) cachePut(ctx context.Context, ck certKey, tlscert *tls.Certifi
 		}
 	}
 
-	return m.Cache.Put(ctx, ck.String(), buf.Bytes())
+	return Put(ctx, ck.String(), buf.Bytes())
 }
 
 func encodeECDSAKey(w io.Writer, key *ecdsa.PrivateKey) error {
@@ -806,7 +806,7 @@ func (m *Manager) deleteCertToken(name string) {
 	delete(m.certTokens, name)
 	if m.Cache != nil {
 		ck := certKey{domain: name, isToken: true}
-		m.Cache.Delete(context.Background(), ck.String())
+		Delete(context.Background(), ck.String())
 	}
 }
 
@@ -821,7 +821,7 @@ func (m *Manager) httpToken(ctx context.Context, tokenPath string) ([]byte, erro
 	if m.Cache == nil {
 		return nil, fmt.Errorf("acme/autocert: no token at %q", tokenPath)
 	}
-	return m.Cache.Get(ctx, httpTokenCacheKey(tokenPath))
+	return Get(ctx, httpTokenCacheKey(tokenPath))
 }
 
 // putHTTPToken stores an http-01 token value using tokenPath as key
@@ -837,7 +837,7 @@ func (m *Manager) putHTTPToken(ctx context.Context, tokenPath, val string) {
 	b := []byte(val)
 	m.httpTokens[tokenPath] = b
 	if m.Cache != nil {
-		m.Cache.Put(ctx, httpTokenCacheKey(tokenPath), b)
+		Put(ctx, httpTokenCacheKey(tokenPath), b)
 	}
 }
 
@@ -850,7 +850,7 @@ func (m *Manager) deleteHTTPToken(tokenPath string) {
 	defer m.tokensMu.Unlock()
 	delete(m.httpTokens, tokenPath)
 	if m.Cache != nil {
-		m.Cache.Delete(context.Background(), httpTokenCacheKey(tokenPath))
+		Delete(context.Background(), httpTokenCacheKey(tokenPath))
 	}
 }
 
@@ -908,9 +908,9 @@ func (m *Manager) accountKey(ctx context.Context) (crypto.Signer, error) {
 		return genKey()
 	}
 
-	data, err := m.Cache.Get(ctx, keyName)
+	data, err := Get(ctx, keyName)
 	if err == ErrCacheMiss {
-		data, err = m.Cache.Get(ctx, legacyKeyName)
+		data, err = Get(ctx, legacyKeyName)
 	}
 	if err == ErrCacheMiss {
 		key, err := genKey()
@@ -921,7 +921,7 @@ func (m *Manager) accountKey(ctx context.Context) (crypto.Signer, error) {
 		if err := encodeECDSAKey(&buf, key); err != nil {
 			return nil, err
 		}
-		if err := m.Cache.Put(ctx, keyName, buf.Bytes()); err != nil {
+		if err := Put(ctx, keyName, buf.Bytes()); err != nil {
 			return nil, err
 		}
 		return key, nil

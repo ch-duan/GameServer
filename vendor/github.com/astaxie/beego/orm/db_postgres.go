@@ -144,13 +144,13 @@ func (d *dbBasePostgres) setval(db dbQuerier, mi *modelInfo, autoFields []string
 		return nil
 	}
 
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 	for _, name := range autoFields {
 		query := fmt.Sprintf("SELECT setval(pg_get_serial_sequence('%s', '%s'), (SELECT MAX(%s%s%s) FROM %s%s%s));",
 			mi.table, name,
 			Q, name, Q,
 			Q, mi.table, Q)
-		if _, err := db.Exec(query); err != nil {
+		if _, err := Exec(query); err != nil {
 			return err
 		}
 	}
@@ -175,7 +175,7 @@ func (d *dbBasePostgres) DbTypes() map[string]string {
 // check index exist in postgresql.
 func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s'", table, name)
-	row := db.QueryRow(query)
+	row := QueryRow(query)
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0

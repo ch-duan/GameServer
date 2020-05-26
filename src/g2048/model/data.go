@@ -1,20 +1,17 @@
-package main
+package model
 
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 )
 
-func main() {
-	m := &Model{}
-	m.Init()
-}
-
 type Model struct {
 	data  [4][4]int
-	socre int
+	score int
 	end   bool
+	input chan bool
 }
 
 //作操作
@@ -101,14 +98,12 @@ func (t *Model) Random() {
 	tmp := rand.Intn(p)
 	score := (rand.Int()%2 + 1) * 2
 	t.data[tmp/4][tmp%4] = score
-	t.socre += score
+	t.score += score
 	fmt.Println("随机数")
 }
 
-// 将地图数据展示出来
-func (t *Model) View() {
+func (t *Model) view() {
 	fmt.Printf("\n\n\n\n\n\n\n\n")
-
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			if t.data[i][j] == 0 {
@@ -121,18 +116,27 @@ func (t *Model) View() {
 		fmt.Println()
 	}
 	fmt.Println("--------------------------------")
-	fmt.Println("分数:", t.socre)
-	//fmt.Println("耗时",time)
+	fmt.Println("分数:", t.score, "当前时间:", time.Now().Format("15:04:05"))
+}
+
+// 将地图数据展示出来
+func (t *Model) View() {
+	for {
+		select {
+		case <-t.input:
+			t.view()
+		case <-time.After(1 * time.Second):
+			t.view()
+		}
+	}
 }
 
 // 设置游戏进入控制流
 func (t *Model) Controller() {
-
 	var name string
 	for !t.end {
 		fmt.Println("等待输入")
 		_, _ = fmt.Scan(&name)
-		fmt.Println("输入", name, name == "a")
 		switch name {
 		case "4":
 			t.Left()
@@ -145,19 +149,26 @@ func (t *Model) Controller() {
 		default:
 			fmt.Println("无法识别")
 		}
-		t.View()
+		t.input <- true
 	}
 
 }
 
-// 将地图数据展示出来
+// 游戏初始化
 func (t *Model) Init() {
-	// 设置游戏状态 为未结束
+
+	var wg sync.WaitGroup
 	t.end = false
-	//设置随机数种子
+	t.input = make(chan bool)
+	//设置随机数种子 并在地图上随机生产两个数字
 	rand.Seed(time.Now().Unix())
 	t.Random()
 	t.Random()
-	t.View()
-	t.Controller()
+
+	// 启动视图流和控制流
+	go t.View()
+	go t.Controller()
+
+	wg.Add(2)
+	wg.Wait()
 }

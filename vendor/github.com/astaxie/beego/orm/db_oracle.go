@@ -87,7 +87,7 @@ func (d *dbBaseOracle) ShowColumnsQuery(table string) string {
 
 // check index is exist
 func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool {
-	row := db.QueryRow("SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES "+
+	row := QueryRow("SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES "+
 		"WHERE USER_IND_COLUMNS.INDEX_NAME = USER_INDEXES.INDEX_NAME "+
 		"AND  USER_IND_COLUMNS.TABLE_NAME = ? AND USER_IND_COLUMNS.INDEX_NAME = ?", strings.ToUpper(table), strings.ToUpper(name))
 
@@ -99,7 +99,7 @@ func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool
 // execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
-	Q := d.ins.TableQuote()
+	Q := TableQuote()
 
 	marks := make([]string, len(names))
 	for i := range marks {
@@ -118,10 +118,10 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
 
-	d.ins.ReplaceMarks(&query)
+	ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+	if isMulti || !HasReturningID(mi, &query) {
+		res, err := Exec(query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -130,7 +130,7 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 		}
 		return 0, err
 	}
-	row := q.QueryRow(query, values...)
+	row := QueryRow(query, values...)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

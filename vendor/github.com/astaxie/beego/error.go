@@ -451,24 +451,24 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 			panic("controller is not ControllerInterface")
 		}
 		//call the controller init function
-		execController.Init(ctx, err.controllerType.Name(), err.method, vc.Interface())
+		Init(ctx, err.controllerType.Name(), err.method, vc.Interface())
 
 		//call prepare function
-		execController.Prepare()
+		Prepare()
 
-		execController.URLMapping()
+		URLMapping()
 
 		method := vc.MethodByName(err.method)
 		method.Call([]reflect.Value{})
 
 		//render template
 		if BConfig.WebConfig.AutoRender {
-			if err := execController.Render(); err != nil {
+			if err := Render(); err != nil {
 				panic(err)
 			}
 		}
 
 		// finish all runrouter. release resource
-		execController.Finish()
+		Finish()
 	}
 }

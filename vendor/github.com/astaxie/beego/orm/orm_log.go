@@ -79,28 +79,28 @@ var _ stmtQuerier = new(stmtQueryLog)
 
 func (d *stmtQueryLog) Close() error {
 	a := time.Now()
-	err := d.stmt.Close()
+	err := Close()
 	debugLogQueies(d.alias, "st.Close", d.query, a, err)
 	return err
 }
 
 func (d *stmtQueryLog) Exec(args ...interface{}) (sql.Result, error) {
 	a := time.Now()
-	res, err := d.stmt.Exec(args...)
+	res, err := Exec(args...)
 	debugLogQueies(d.alias, "st.Exec", d.query, a, err, args...)
 	return res, err
 }
 
 func (d *stmtQueryLog) Query(args ...interface{}) (*sql.Rows, error) {
 	a := time.Now()
-	res, err := d.stmt.Query(args...)
+	res, err := Query(args...)
 	debugLogQueies(d.alias, "st.Query", d.query, a, err, args...)
 	return res, err
 }
 
 func (d *stmtQueryLog) QueryRow(args ...interface{}) *sql.Row {
 	a := time.Now()
-	res := d.stmt.QueryRow(args...)
+	res := QueryRow(args...)
 	debugLogQueies(d.alias, "st.QueryRow", d.query, a, nil, args...)
 	return res
 }
@@ -128,84 +128,84 @@ var _ txEnder = new(dbQueryLog)
 
 func (d *dbQueryLog) Prepare(query string) (*sql.Stmt, error) {
 	a := time.Now()
-	stmt, err := d.db.Prepare(query)
+	stmt, err := Prepare(query)
 	debugLogQueies(d.alias, "db.Prepare", query, a, err)
 	return stmt, err
 }
 
 func (d *dbQueryLog) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	a := time.Now()
-	stmt, err := d.db.PrepareContext(ctx, query)
+	stmt, err := PrepareContext(ctx, query)
 	debugLogQueies(d.alias, "db.Prepare", query, a, err)
 	return stmt, err
 }
 
 func (d *dbQueryLog) Exec(query string, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
-	res, err := d.db.Exec(query, args...)
+	res, err := Exec(query, args...)
 	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
 	return res, err
 }
 
 func (d *dbQueryLog) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
-	res, err := d.db.ExecContext(ctx, query, args...)
+	res, err := ExecContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
 	return res, err
 }
 
 func (d *dbQueryLog) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	a := time.Now()
-	res, err := d.db.Query(query, args...)
+	res, err := Query(query, args...)
 	debugLogQueies(d.alias, "db.Query", query, a, err, args...)
 	return res, err
 }
 
 func (d *dbQueryLog) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	a := time.Now()
-	res, err := d.db.QueryContext(ctx, query, args...)
+	res, err := QueryContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.Query", query, a, err, args...)
 	return res, err
 }
 
 func (d *dbQueryLog) QueryRow(query string, args ...interface{}) *sql.Row {
 	a := time.Now()
-	res := d.db.QueryRow(query, args...)
+	res := QueryRow(query, args...)
 	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
 	return res
 }
 
 func (d *dbQueryLog) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	a := time.Now()
-	res := d.db.QueryRowContext(ctx, query, args...)
+	res := QueryRowContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
 	return res
 }
 
 func (d *dbQueryLog) Begin() (*sql.Tx, error) {
 	a := time.Now()
-	tx, err := d.db.(txer).Begin()
+	tx, err := Begin()
 	debugLogQueies(d.alias, "db.Begin", "START TRANSACTION", a, err)
 	return tx, err
 }
 
 func (d *dbQueryLog) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
 	a := time.Now()
-	tx, err := d.db.(txer).BeginTx(ctx, opts)
+	tx, err := BeginTx(ctx, opts)
 	debugLogQueies(d.alias, "db.BeginTx", "START TRANSACTION", a, err)
 	return tx, err
 }
 
 func (d *dbQueryLog) Commit() error {
 	a := time.Now()
-	err := d.db.(txEnder).Commit()
+	err := Commit()
 	debugLogQueies(d.alias, "tx.Commit", "COMMIT", a, err)
 	return err
 }
 
 func (d *dbQueryLog) Rollback() error {
 	a := time.Now()
-	err := d.db.(txEnder).Rollback()
+	err := Rollback()
 	debugLogQueies(d.alias, "tx.Rollback", "ROLLBACK", a, err)
 	return err
 }

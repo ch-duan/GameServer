@@ -55,7 +55,7 @@ func parseValue(param *MethodParam, paramValue string, paramType reflect.Type) (
 		return reflect.Zero(paramType), nil
 	}
 	parser := getParser(param, paramType)
-	value, err := parser.parse(paramValue, paramType)
+	value, err := parse(paramValue, paramType)
 	if err != nil {
 		return result, err
 	}

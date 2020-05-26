@@ -96,7 +96,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	}
 	names = append(names, otherNames...)
 	values = append(values, otherValues...)
-	return dbase.InsertValue(orm.db, mi, true, names, values)
+	return InsertValue(orm.db, mi, true, names, values)
 }
 
 // remove models following the origin model relationship
@@ -104,26 +104,25 @@ func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 	fi := o.fi
 	qs := o.qs.Filter(fi.reverseFieldInfo.name, o.md)
 
-	return qs.Filter(fi.reverseFieldInfoTwo.name+ExprSep+"in", mds).Delete()
+	return Delete()
 }
 
 // check model is existed in relationship of origin model
 func (o *queryM2M) Exist(md interface{}) bool {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).
-		Filter(fi.reverseFieldInfoTwo.name, md).Exist()
+	return Exist()
 }
 
 // clean all models in related of origin model
 func (o *queryM2M) Clear() (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Delete()
+	return Delete()
 }
 
 // count all related models of origin model
 func (o *queryM2M) Count() (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Count()
+	return Count()
 }
 
 var _ QueryM2Mer = new(queryM2M)

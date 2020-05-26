@@ -263,7 +263,7 @@ func (d *decoder) terror(n *node, tag string, out reflect.Value) {
 
 func (d *decoder) callUnmarshaler(n *node, u Unmarshaler) (good bool) {
 	terrlen := len(d.terrors)
-	err := u.UnmarshalYAML(func(v interface{}) (err error) {
+	err := UnmarshalYAML(func(v interface{}) (err error) {
 		defer handleErr(&err)
 		d.unmarshal(n, reflect.ValueOf(v))
 		if len(d.terrors) > terrlen {

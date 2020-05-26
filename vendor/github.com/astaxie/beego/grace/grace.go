@@ -140,7 +140,7 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 		Network:      "tcp",
 		terminalChan: make(chan error), //no cache channel
 	}
-	srv.Server = &http.Server{
+	Server = &http.Server{
 		Addr:           addr,
 		ReadTimeout:    DefaultReadTimeOut,
 		WriteTimeout:   DefaultWriteTimeOut,

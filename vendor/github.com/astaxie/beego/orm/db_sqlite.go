@@ -101,8 +101,8 @@ func (d *dbBaseSqlite) ShowTablesQuery() string {
 
 // get columns in sqlite.
 func (d *dbBaseSqlite) GetColumns(db dbQuerier, table string) (map[string][3]string, error) {
-	query := d.ins.ShowColumnsQuery(table)
-	rows, err := db.Query(query)
+	query := ShowColumnsQuery(table)
+	rows, err := Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 // check index exist in sqlite.
 func (d *dbBaseSqlite) IndexExists(db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("PRAGMA index_list('%s')", table)
-	rows, err := db.Query(query)
+	rows, err := Query(query)
 	if err != nil {
 		panic(err)
 	}

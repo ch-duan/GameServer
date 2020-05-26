@@ -165,7 +165,7 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 
 // generate join string.
 func (t *dbTables) getJoinSQL() (join string) {
-	Q := t.base.TableQuote()
+	Q := TableQuote()
 
 	for _, jt := range t.tables {
 		if jt.inner {
@@ -331,7 +331,7 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 		return
 	}
 
-	Q := t.base.TableQuote()
+	Q := TableQuote()
 
 	mi := t.mi
 
@@ -377,11 +377,11 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 			if p.isRaw {
 				operSQL = p.sql
 			} else {
-				operSQL, args = t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
+				operSQL, args = GenerateOperatorSQL(mi, fi, operator, p.args, tz)
 			}
 
 			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
-			t.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
+			GenerateOperatorLeftCol(fi, operator, &leftCol)
 
 			where += fmt.Sprintf("%s %s ", leftCol, operSQL)
 			params = append(params, args...)
@@ -402,7 +402,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 		return
 	}
 
-	Q := t.base.TableQuote()
+	Q := TableQuote()
 
 	groupSqls := make([]string, 0, len(groups))
 	for _, group := range groups {
@@ -426,7 +426,7 @@ func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
 		return
 	}
 
-	Q := t.base.TableQuote()
+	Q := TableQuote()
 
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
@@ -457,7 +457,7 @@ func (t *dbTables) getLimitSQL(mi *modelInfo, offset int64, limit int64) (limits
 	if limit < 0 {
 		// no limit
 		if offset > 0 {
-			maxLimit := t.base.MaxLimit()
+			maxLimit := MaxLimit()
 			if maxLimit == 0 {
 				limits = fmt.Sprintf("OFFSET %d", offset)
 			} else {
