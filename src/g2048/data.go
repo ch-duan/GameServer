@@ -121,7 +121,8 @@ func (t *Model) View() {
 		fmt.Println()
 	}
 	fmt.Println("--------------------------------")
-	fmt.Println(t.socre)
+	fmt.Println("分数:", t.socre)
+	//fmt.Println("耗时",time)
 }
 
 // 设置游戏进入控制流
