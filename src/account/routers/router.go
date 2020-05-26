@@ -1,8 +1,8 @@
 package routers
 
 import (
+	"gameserver/src/account/controllers"
 	"github.com/astaxie/beego"
-	"zjko.vip/game/src/account/controllers"
 )
 
 func init() {

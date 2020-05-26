@@ -1,7 +1,7 @@
 package main
 
 import (
-	g2048 "zjko.vip/game/src/g2048/model"
+	g2048 "gameserver/src/g2048/model"
 )
 
 func main() {

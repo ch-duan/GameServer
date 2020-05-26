@@ -1,8 +1,8 @@
 package main
 
 import (
+	_ "gameserver/src/account/routers"
 	"github.com/astaxie/beego"
-	_ "zjko.vip/game/src/account/routers"
 )
 
 func main() {

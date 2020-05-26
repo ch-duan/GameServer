@@ -2,11 +2,15 @@ package model
 
 import (
 	"fmt"
+	"github.com/nsf/termbox-go"
 	"math/rand"
+	"os"
+	"os/exec"
 	"sync"
 	"time"
 )
 
+//Model Model
 type Model struct {
 	data  [4][4]int
 	score int
@@ -102,8 +106,11 @@ func (t *Model) Random() {
 	fmt.Println("随机数")
 }
 
-func (t *Model) view() {
-	fmt.Printf("\n\n\n\n\n\n\n\n")
+func (t *Model) view(wg *sync.WaitGroup) {
+	// fmt.Printf("\x1bc")
+	cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			if t.data[i][j] == 0 {
@@ -117,58 +124,74 @@ func (t *Model) view() {
 	}
 	fmt.Println("--------------------------------")
 	fmt.Println("分数:", t.score, "当前时间:", time.Now().Format("15:04:05"))
+	if t.score == 2048 {
+		fmt.Println("你胜利了!")
+		wg.Done()
+		wg.Done()
+	}
 }
 
 // 将地图数据展示出来
-func (t *Model) View() {
+func (t *Model) View(wg *sync.WaitGroup) {
 	for {
 		select {
 		case <-t.input:
-			t.view()
+			t.view(wg)
 		case <-time.After(1 * time.Second):
-			t.view()
+			t.view(wg)
 		}
 	}
 }
 
 // 设置游戏进入控制流
-func (t *Model) Controller() {
-	var name string
+func (t *Model) Controller(wg *sync.WaitGroup) {
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termbox.Close()
 	for !t.end {
 		fmt.Println("等待输入")
-		_, _ = fmt.Scan(&name)
-		switch name {
-		case "4":
-			t.Left()
-		case "6":
-			t.Right()
-		case "8":
-			t.Up()
-		case "2":
-			t.Down()
-		default:
-			fmt.Println("无法识别")
+		switch ev := termbox.PollEvent(); ev.Type {
+		case termbox.EventKey:
+			switch ev.Key {
+			case termbox.KeyArrowUp:
+				t.Up()
+			case termbox.KeyArrowDown:
+				t.Down()
+			case termbox.KeyArrowLeft:
+				t.Left()
+			case termbox.KeyArrowRight:
+				t.Right()
+			case termbox.KeyCtrlC:
+				wg.Done()
+				wg.Done()
+			default:
+				fmt.Println("无法识别")
+			}
+
 		}
 		t.input <- true
 	}
 
 }
 
-// 游戏初始化
+//Init 游戏初始化
 func (t *Model) Init() {
 
 	var wg sync.WaitGroup
 	t.end = false
 	t.input = make(chan bool)
+	// over := make(chan bool)
 	//设置随机数种子 并在地图上随机生产两个数字
 	rand.Seed(time.Now().Unix())
 	t.Random()
 	t.Random()
 
 	// 启动视图流和控制流
-	go t.View()
-	go t.Controller()
-
 	wg.Add(2)
+	go t.View(&wg)
+	go t.Controller(&wg)
+
 	wg.Wait()
 }

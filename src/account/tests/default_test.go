@@ -1,14 +1,12 @@
 package test
 
 import (
+	"github.com/astaxie/beego"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"runtime"
 	"testing"
-	_ "zjko.vip/game/src/account/routers"
-
-	"github.com/astaxie/beego"
 )
 
 func init() {
@@ -24,7 +22,6 @@ func TestBeego(t *testing.T) {
 	beego.BeeApp.Handlers.ServeHTTP(w, r)
 
 	beego.Trace("testing", "TestBeego", "Code[%d]\n%s", w.Code, w.Body.String())
-
 	Convey("Subject: Test Station Endpoint\n", t, func() {
 		Convey("Status Code Should Be 200", func() {
 			So(w.Code, ShouldEqual, 200)

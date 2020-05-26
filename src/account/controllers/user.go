@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"gameserver/src/account/models"
 	"github.com/astaxie/beego"
-	"zjko.vip/game/src/account/models"
 )
 
 type UserController struct {
